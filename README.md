@@ -1,125 +1,150 @@
-# 📊 RH Analytics Dashboard
+# 👥 RH Analytics Dashboard
 
-Dashboard analítico de Recursos Humanos desenvolvido como projeto de portfólio, cobrindo análise de **Turnover**, **Desligamentos** e **Headcount** com SQL Server, Power BI e Python.
+> Pipeline completo de Análise de RH: SQL Server → Power BI → Python
 
----
-
-## 🎯 Objetivo
-
-Transformar dados brutos de RH em insights estratégicos para apoiar decisões de retenção de talentos, identificar departamentos críticos e compreender o perfil dos colaboradores ativos e desligados.
-
----
-
-## 🛠️ Tecnologias Utilizadas
-
-| Tecnologia | Versão | Finalidade |
-|---|---|---|
-| SQL Server | 17.0 | Banco de dados e modelagem |
-| SSMS | 22 | Administração e queries |
-| Power BI Desktop | Gratuito | Dashboard e visualizações |
-| Python | 3.15 | Análises complementares |
-| Pandas | — | Manipulação de dados |
-| Matplotlib / Seaborn | — | Geração de gráficos |
-| pyodbc | — | Conexão Python → SQL Server |
+![Power BI](https://img.shields.io/badge/Power%20BI-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)
+![SQL Server](https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![pandas](https://img.shields.io/badge/pandas-150458?style=for-the-badge&logo=pandas&logoColor=white)
+![matplotlib](https://img.shields.io/badge/matplotlib-11557c?style=for-the-badge&logo=python&logoColor=white)
 
 ---
 
-## 🗂️ Estrutura do Projeto
+## 🎯 Sobre o Projeto
+
+Dashboard de RH interativo desenvolvido como projeto de portfólio, cobrindo o ciclo completo de análise de dados — desde a modelagem em SQL Server até a visualização em Power BI e análise exploratória em Python.
+
+O projeto simula o ambiente analítico de uma empresa com foco em gestão de pessoas, abrangendo 4 páginas analíticas integradas com navegação fluida entre visões estratégicas de headcount, turnover e desligamentos.
+
+---
+
+## 🏗️ Arquitetura do Pipeline
+
+```
+SQL Server (Views)  →  Power BI (Dashboard)  →  Python (Análise)  →  GitHub
+      ↓                        ↓                       ↓
+  Modelagem               Storytelling            Visualizações
+  com Views               com 4 páginas           matplotlib
+```
+
+---
+
+## 📁 Estrutura do Repositório
 
 ```
 projeto-rh-analytics/
-├── Gráficos avançados Python_Pandas/   # Gráficos gerados via Python
-│   ├── grafico_turnover_departamento.png
+│
+├── sql/                          # Script SQL do projeto
+│   └── RH analytics projeto.sql
+│
+├── Python/                       # Script de análise Python
+│   └── analise_rh.py
+│
+├── Backgrounds/                  # Backgrounds customizados do dashboard
+│   ├── bg_inicio (Template Capa).png
+│   ├── bg_visao_geral (Template 1).png
+│   ├── bg_pessoas (Template 2).png
+│   └── bg_desligamentos (Template 3).png
+│
+├── charts/                       # Gráficos gerados via Python
+│   ├── grafico_desligamentos_por_ano.png
+│   ├── grafico_funcionarios_ativos.png
 │   ├── grafico_Motivo_Saida.png
 │   ├── grafico_tempo_casa_departamento.png
-│   ├── grafico_desligamentos_por_ano.png
-│   └── grafico_funcionarios_ativos.png
-├── Capturas de tela_PBI/               # Screenshots do dashboard Power BI
+│   └── grafico_turnover_departamento.png
+│
+├── Screenshots/                  # Capturas das páginas do dashboard Power BI
 │   ├── screenshot_inicio.png
 │   ├── screenshot_visao_geral.png
 │   ├── screenshot_pessoas.png
 │   └── screenshot_desligamentos.png
-├── RH analytics projeto.sql            # Script SQL completo (tabelas, dados e views)
-├── analise_rh.py                       # Script Python de análise
+│
+├── RH_Analytics_Dashboard.pbix
 └── README.md
 ```
 
 ---
 
-## 🗄️ Modelagem de Dados (SQL Server)
+## 📊 Páginas do Dashboard
 
-O banco `RH_Analytics` contém 4 tabelas relacionais e 6 views otimizadas para consumo no Power BI:
+### 1 — Início
+Página de boas-vindas com descrição do projeto e navegação central para as três visões analíticas: Visão Geral, Pessoas e Desligamentos. Stack tecnológica exibida como contexto do portfólio.
 
-**Tabelas:**
-- `Funcionarios` — cadastro completo com admissão, demissão e motivo de saída
-- `Departamentos` — estrutura organizacional e gestores
-- `Cargos` — níveis (Júnior, Pleno, Sênior) e salário base
-- `Historico_Movimentacoes` — admissões, promoções, transferências e demissões
+### 2 — Visão Geral
+KPIs consolidados: Headcount Ativo, Turnover Médio (%), Tenure Médio em Meses e Salário Médio. Análise de colaboradores ativos por departamento, turnover por área com alerta para departamentos acima de 28%, e ranking de retenção por tempo médio de casa. Filtro interativo por departamento.
 
-**Views (camada de dados):**
-- `vw_Funcionarios_Ativos` — perfil completo do quadro ativo
-- `vw_Desligamentos` — histórico de saídas com tempo de casa e motivo
-- `vw_Turnover_Departamento` — taxa de turnover por departamento
-- `vw_Headcount_Ativo` — headcount consolidado
-- `vw_Tenure_Departamento` — tempo médio de empresa
-- `vw_Painel_Executivo` — visão consolidada com todos os KPIs
+### 3 — Pessoas
+Tabela detalhada de colaboradores com Funcionário, Departamento, Cargo, Nível, Anos e Salário. KPIs de composição por gênero (Homens/Mulheres), distribuição por escolaridade e breakdown por nível de senioridade (Júnior · Pleno · Sênior).
+
+### 4 — Desligamentos
+KPIs: Total de Desligamentos, Turnover Médio (%) e Meses Médios até Saída. Análise de motivos de saída (Pedido de demissão, Desligamento empresa, Abandono, Aposentadoria), comparativo anual de desligamentos e distribuição por departamento com insights narrativos integrados.
 
 ---
 
-## 📈 Dashboard Power BI
+## 🐍 Análise Python
 
-O dashboard é composto por 4 páginas com navegação via botões:
+Script independente que conecta diretamente ao SQL Server via `pyodbc` e gera 5 visualizações analíticas em matplotlib com identidade visual alinhada ao dashboard:
 
-### Início (Capa)
-![Início](Capturas%20de%20tela_PBI/screenshot_inicio.png)
+| # | Gráfico | Tipo |
+|---|---------|------|
+| 01 | Desligamentos por Ano | Barras verticais |
+| 02 | Funcionários Ativos | Barras verticais |
+| 03 | Motivo de Saída | Barras horizontais |
+| 04 | Tempo de Casa por Departamento | Barras horizontais |
+| 05 | Turnover por Departamento | Barras horizontais |
 
-### Visão Geral
-![Visão Geral](Capturas%20de%20tela_PBI/screenshot_visao_geral.png)
+### Como executar
 
-### Pessoas
-![Pessoas](Capturas%20de%20tela_PBI/screenshot_pessoas.png)
-
-### Desligamentos
-![Desligamentos](Capturas%20de%20tela_PBI/screenshot_desligamentos.png)
-
----
-
-## 🐍 Análise em Python
-
-O script `analise_rh.py` conecta diretamente ao SQL Server via `pyodbc`, consulta as views e gera 5 gráficos seguindo os princípios de **Storytelling with Data**:
-
-1. **Turnover por departamento** — identifica os departamentos críticos
-2. **Motivos de desligamento** — destaque para saídas voluntárias
-3. **Tempo de casa por departamento** — alerta de retenção
-4. **Evolução de desligamentos por ano** — tendência histórica
-5. **Funcionários ativos por departamento** — distribuição do quadro atual
-
-**Para executar:**
 ```bash
-# Pré-requisitos: Python 3.x, SQL Server com Windows Authentication
-pip install pandas pyodbc matplotlib seaborn
+# 1. Criar e ativar ambiente virtual
+python -m venv venv
+venv\Scripts\activate          # Windows
 
-# Executar
+# 2. Instalar dependências
+pip install pyodbc pandas matplotlib numpy
+
+# 3. Configurar conexão em analise_rh.py
+SERVER   = "localhost"         # seu servidor SQL Server
+DATABASE = "RH_Analytics"
+
+# 4. Executar
 python analise_rh.py
+# → Gráficos salvos em charts/
 ```
 
 ---
 
-## 🔍 Principais Insights
+## 🎨 Identidade Visual
 
-- **Comercial e Vendas, Financeiro e Suporte ao Cliente** lideram o turnover com **28,6%** cada
-- **Pedido de demissão** é o principal motivo de saída — sinal de alerta para retenção voluntária
-- Turnover médio global de **24,4%** — acima do benchmark saudável de mercado (10–15%)
-- Departamentos com menor tempo de casa nos desligados indicam falha no processo de integração
+Paleta de cores aplicada de forma consistente no Power BI e no Python:
+
+| Cor | Hex | Uso |
+|-----|-----|-----|
+| Fundo Principal | `#0D1B2A` | Fundo das páginas |
+| Fundo Card | `#162032` | Cards e áreas de gráfico |
+| Turquesa | `#4ECDC4` | Série de dados principal e destaques |
+| Laranja | `#E8956D` | Alertas e série de dados secundária |
 
 ---
 
-## 👨‍💻 Autor
+## 🛠️ Stack Tecnológica
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Banco de dados | SQL Server 17 |
+| Modelagem | Views SQL |
+| Visualização | Power BI Desktop |
+| Análise | Python 3 · pandas · matplotlib · pyodbc · numpy |
+| Versionamento | Git · GitHub |
+
+---
+
+## 👤 Autor
 
 **Daniel Mendes**  
-Analista de Dados  
-[GitHub](https://github.com/DanielMendes-Dados) · [LinkedIn](https://www.linkedin.com/in/danielgmendes/)
+Analista de Dados | Power BI · SQL · Python  
+[LinkedIn](https://www.linkedin.com/in/danielmendes-dados) · [GitHub](https://github.com/DanielMendes-Dados)
 
 ---
 
-> Projeto desenvolvido para portfólio profissional — Novembro/2026
+*Projeto desenvolvido para portfólio profissional — dados simulados.*
