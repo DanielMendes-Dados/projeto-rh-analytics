@@ -51,7 +51,8 @@ projeto-rh-analytics/
 │   ├── grafico_funcionarios_ativos.png
 │   ├── grafico_Motivo_Saida.png
 │   ├── grafico_tempo_casa_departamento.png
-│   └── grafico_turnover_departamento.png
+│   ├── grafico_turnover_departamento.png
+│   └── grafico_turnover_nivel.png
 │
 ├── Screenshots/                  # Capturas das páginas do dashboard Power BI
 │   ├── screenshot_inicio.png
@@ -83,15 +84,16 @@ KPIs: Total de Desligamentos, Turnover Médio (%) e Meses Médios até Saída. A
 
 ## 🐍 Análise Python
 
-Script independente que conecta diretamente ao SQL Server via `pyodbc` e gera 5 visualizações analíticas em matplotlib com identidade visual alinhada ao dashboard:
+Script independente que conecta diretamente ao SQL Server via `pyodbc` e gera 6 visualizações analíticas em matplotlib com identidade visual alinhada ao dashboard:
 
 | # | Gráfico | Tipo |
 |---|---------|------|
 | 01 | Desligamentos por Ano | Barras verticais |
 | 02 | Funcionários Ativos | Barras verticais |
-| 03 | Motivo de Saída | Barras horizontais |
+| 03 | Motivo de Saída | Barras verticais |
 | 04 | Tempo de Casa por Departamento | Barras horizontais |
 | 05 | Turnover por Departamento | Barras horizontais |
+| 06 | Turnover por Nível de Senioridade | Barras verticais |
 
 ### Como executar
 
@@ -101,14 +103,14 @@ python -m venv venv
 venv\Scripts\activate          # Windows
 
 # 2. Instalar dependências
-pip install pyodbc pandas matplotlib numpy
+pip install pyodbc pandas matplotlib
 
 # 3. Configurar conexão em analise_rh.py
-SERVER   = "localhost"         # seu servidor SQL Server
-DATABASE = "RH_Analytics"
+SERVIDOR = "localhost"         # seu servidor SQL Server
+BANCO    = "RH_Analytics"
 
 # 4. Executar
-python analise_rh.py
+python Python/analise_rh.py
 # → Gráficos salvos em charts/
 ```
 
@@ -120,10 +122,11 @@ Paleta de cores aplicada de forma consistente no Power BI e no Python:
 
 | Cor | Hex | Uso |
 |-----|-----|-----|
-| Fundo Principal | `#0D1B2A` | Fundo das páginas |
-| Fundo Card | `#162032` | Cards e áreas de gráfico |
-| Turquesa | `#4ECDC4` | Série de dados principal e destaques |
-| Laranja | `#E8956D` | Alertas e série de dados secundária |
+| Fundo Principal | `#0F1B2E` | Fundo das páginas e dos gráficos |
+| Fundo Card | `#192A46` | Cards e áreas de gráfico |
+| Turquesa | `#00B4B4` | Série de dados principal |
+| Laranja | `#E8703A` | Destaque e alerta (o ponto que exige atenção) |
+| Cinza | `#8D99AE` | Eixos, rótulos e contexto |
 
 ---
 
@@ -134,7 +137,7 @@ Paleta de cores aplicada de forma consistente no Power BI e no Python:
 | Banco de dados | SQL Server 17 |
 | Modelagem | Views SQL |
 | Visualização | Power BI Desktop |
-| Análise | Python 3 · pandas · matplotlib · pyodbc · numpy |
+| Análise | Python 3 · pandas · matplotlib · pyodbc |
 | Versionamento | Git · GitHub |
 
 ---
@@ -147,4 +150,14 @@ Analista de Dados | Power BI · SQL · Python
 
 ---
 
-*Projeto desenvolvido para portfólio profissional — dados simulados.*
+## 📐 Definições das métricas
+
+| Métrica | Definição |
+|---------|-----------|
+| Headcount ativo | Colaboradores sem `data_demissao` |
+| Turnover (%) | Desligados ÷ total de colaboradores do recorte × 100 (acumulado de todo o período, não anualizado) |
+| Tenure (meses) | Meses entre admissão e desligamento; para ativos, até a data da consulta |
+
+---
+
+*Projeto desenvolvido para portfólio profissional — dados simulados (49 colaboradores, 7 departamentos, desligamentos entre 2022 e 2023).*

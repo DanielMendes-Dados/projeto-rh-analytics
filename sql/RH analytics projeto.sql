@@ -104,7 +104,7 @@ INSERT INTO Cargos (nome_cargo, nivel, salario_base) VALUES
 ('Analista de Marketing',     'Pleno',    4500.00);
 GO
  
--- CARGA 3: Funcionarios (50 registros — ativos e desligados)
+-- CARGA 3: Funcionarios (49 registros — 37 ativos e 12 desligados)
 -- Ordem das colunas: nome, data_nascimento, genero, escolaridade,
 --                    data_admissao, data_demissao, motivo_saida,
 --                    id_departamento, id_cargo, salario
@@ -180,19 +180,20 @@ VALUES
 GO
  
 -- CARGA 4: Historico de Movimentacoes (17 registros)
+-- Obs.: id_funcionario segue a ordem de insercao da CARGA 3 (IDENTITY 1..49)
 -- Registra: admissoes, promocoes, transferencias e demissoes
 INSERT INTO Historico_Movimentacoes
     (id_funcionario, tipo_movimentacao, data_movimentacao,
      cargo_anterior, cargo_novo,
      departamento_anterior, departamento_novo, observacao)
 VALUES
-(1,  'Admissao',      '2020-01-10', NULL,                       'Analista de Dados Pleno',    NULL,                       'Tecnologia da Informacao', 'Contratacao externa'),
+(1,  'Admissao',      '2020-01-10', NULL,                       'Analista de Dados Junior',   NULL,                       'Tecnologia da Informacao', 'Contratacao externa'),
 (2,  'Admissao',      '2021-03-01', NULL,                       'Desenvolvedor Pleno',         NULL,                       'Tecnologia da Informacao', 'Contratacao externa'),
 (3,  'Admissao',      '2019-06-15', NULL,                       'Analista de Dados Senior',    NULL,                       'Tecnologia da Informacao', 'Contratacao externa'),
 (4,  'Admissao',      '2022-08-01', NULL,                       'Analista de Dados Junior',    NULL,                       'Tecnologia da Informacao', 'Contratacao externa'),
 (1,  'Promocao',      '2022-06-01', 'Analista de Dados Junior', 'Analista de Dados Pleno',     'Tecnologia da Informacao', 'Tecnologia da Informacao', 'Promocao por desempenho'),
 (8,  'Admissao',      '2020-04-01', NULL,                       'Consultor Comercial',         NULL,                       'Comercial e Vendas',       'Contratacao externa'),
-(14, 'Admissao',      '2020-02-01', NULL,                       'Analista de RH Pleno',        NULL,                       'Recursos Humanos',         'Contratacao externa'),
+(14, 'Admissao',      '2020-02-01', NULL,                       'Analista de RH Junior',       NULL,                       'Recursos Humanos',         'Contratacao externa'),
 (14, 'Promocao',      '2022-10-01', 'Analista de RH Junior',    'Analista de RH Pleno',        'Recursos Humanos',         'Recursos Humanos',         'Promocao por desempenho'),
 (18, 'Admissao',      '2018-11-01', NULL,                       'Analista Financeiro Senior',  NULL,                       'Financeiro',               'Contratacao externa'),
 (6,  'Demissao',      '2022-05-31', 'Analista de Dados Pleno',  NULL,                          'Tecnologia da Informacao', NULL,                       'Pedido de demissao voluntaria'),
@@ -200,9 +201,9 @@ VALUES
 (12, 'Demissao',      '2022-12-31', 'Consultor Comercial',      NULL,                          'Comercial e Vendas',       NULL,                       'Pedido de demissao voluntaria'),
 (13, 'Demissao',      '2023-09-30', 'Consultor Comercial',      NULL,                          'Comercial e Vendas',       NULL,                       'Desligamento por reestruturacao'),
 (5,  'Transferencia', '2022-03-01', 'Desenvolvedor Pleno',      'Desenvolvedor Pleno',         'Comercial e Vendas',       'Tecnologia da Informacao', 'Transferencia a pedido'),
-(23, 'Demissao',      '2022-08-31', 'Analista Financeiro Pleno',NULL,                          'Financeiro',               NULL,                       'Aposentadoria'),
-(29, 'Demissao',      '2022-02-28', 'Analista de Suporte Junior',NULL,                         'Operacoes',                NULL,                       'Desligamento empresa'),
-(34, 'Demissao',      '2022-11-30', 'Analista de Marketing Pleno',NULL,                        'Marketing',                NULL,                       'Pedido de demissao voluntaria');
+(22, 'Demissao',      '2022-08-31', 'Analista Financeiro Pleno',NULL,                          'Financeiro',               NULL,                       'Aposentadoria'),
+(28, 'Demissao',      '2022-02-28', 'Analista de Suporte Junior',NULL,                         'Operacoes',                NULL,                       'Desligamento empresa'),
+(33, 'Demissao',      '2022-11-30', 'Analista de Marketing Pleno',NULL,                        'Marketing',                NULL,                       'Pedido de demissao voluntaria');
 GO
 
 
@@ -578,6 +579,24 @@ INNER JOIN Departamentos d ON f.id_departamento = d.id_departamento
 GROUP BY d.nome_departamento, d.gestor_responsavel;
 GO
 
+-- VIEW 7: Turnover por nivel de senioridade
+-- (principal recorte da analise: o risco de saida se concentra em Junior e Pleno)
+CREATE OR ALTER VIEW vw_Turnover_Nivel AS
+SELECT
+    c.nivel                                                      AS Nivel,
+    COUNT(f.id_funcionario)                                      AS Total_Funcionarios,
+    SUM(CASE WHEN f.data_demissao IS NULL     THEN 1 ELSE 0 END) AS Ativos,
+    SUM(CASE WHEN f.data_demissao IS NOT NULL THEN 1 ELSE 0 END) AS Desligados,
+    CAST(
+        SUM(CASE WHEN f.data_demissao IS NOT NULL THEN 1.0 ELSE 0 END)
+        / COUNT(f.id_funcionario) * 100
+    AS DECIMAL(5,1))                                             AS Turnover_Pct,
+    AVG(f.salario)                                               AS Salario_Medio
+FROM Funcionarios f
+INNER JOIN Cargos c ON f.id_cargo = c.id_cargo
+GROUP BY c.nivel;
+GO
+
 -- Testando as Views — selecione e execute um de cada vez
 SELECT * FROM vw_Headcount_Ativo      ORDER BY Headcount_Ativo DESC;
 GO
@@ -590,4 +609,6 @@ GO
 SELECT * FROM vw_Desligamentos         ORDER BY Ano_Saida, Departamento;
 GO
 SELECT * FROM vw_Painel_Executivo      ORDER BY Ativos DESC;
+GO
+SELECT * FROM vw_Turnover_Nivel        ORDER BY Turnover_Pct DESC;
 GO

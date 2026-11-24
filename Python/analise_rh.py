@@ -2,14 +2,14 @@
 # PROJETO RH ANALYTICS - Análise em Python
 # Autor: Daniel Mendes
 # Descrição: Análises complementares ao dashboard Power BI
-#            Conexão SQL Server → Pandas → Matplotlib/Seaborn
+#            Conexão SQL Server → Pandas → Matplotlib
 # =============================================================================
 
 import pyodbc
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-import seaborn as sns
+import os
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -26,6 +26,16 @@ STRING_CONEXAO = (
     f"DATABASE={BANCO};"
     "Trusted_Connection=yes;"
 )
+
+# Pasta de saída dos gráficos (relativa à raiz do repositório)
+PASTA_CHARTS = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'charts')
+os.makedirs(PASTA_CHARTS, exist_ok=True)
+
+def salvar(fig_nome: str):
+    """Salva a figura atual em charts/ com o padrão visual do projeto."""
+    caminho = os.path.join(PASTA_CHARTS, fig_nome)
+    plt.savefig(caminho, dpi=150, bbox_inches='tight', facecolor=NAVY)
+    print(f"Salvo: charts/{fig_nome}")
 
 # =============================================================================
 # IDENTIDADE VISUAL (mesma do Power BI)
@@ -111,9 +121,7 @@ def grafico_turnover_departamento():
               loc='lower right', framealpha=0, labelcolor=WHITE)
 
     plt.tight_layout()
-    plt.savefig('grafico_turnover_departamento.png', dpi=150, bbox_inches='tight',
-                facecolor=NAVY)
-    print("Salvo: grafico_turnover_departamento.png")
+    salvar('grafico_turnover_departamento.png')
     plt.show()
 
 
@@ -164,9 +172,7 @@ def grafico_Motivo_Saida():
               loc='upper right', framealpha=0, labelcolor=WHITE)
 
     plt.tight_layout()
-    plt.savefig('grafico_Motivo_Saida.png', dpi=150, bbox_inches='tight',
-                facecolor=NAVY)
-    print("Salvo: grafico_Motivo_Saida.png")
+    salvar('grafico_Motivo_Saida.png')
     plt.show()
 
 
@@ -211,9 +217,7 @@ def grafico_tempo_casa_departamento():
               loc='lower right', framealpha=0, labelcolor=WHITE)
 
     plt.tight_layout()
-    plt.savefig('grafico_tempo_casa_departamento.png', dpi=150, bbox_inches='tight',
-                facecolor=NAVY)
-    print("Salvo: grafico_tempo_casa_departamento.png")
+    salvar('grafico_tempo_casa_departamento.png')
     plt.show()
 
 
@@ -250,20 +254,23 @@ def grafico_desligamentos_por_ano():
 
     ax.set_xlabel('Ano', color=GRAY)
     ax.set_ylabel('Desligamentos', color=GRAY)
+    ax.set_ylim(0, df['Total'].max() * 1.35)   # espaço para a legenda não cobrir as barras
+    # Título dinâmico: descreve a variação real entre o primeiro e o último ano
+    primeiro, ultimo = df['Total'].iloc[0], df['Total'].iloc[-1]
+    variacao = (ultimo - primeiro) / primeiro * 100
+    sentido = 'caíram' if variacao < 0 else 'cresceram'
     ax.set_title(
-        'Volume de desligamentos cresceu nos últimos anos',
+        f"Desligamentos {sentido} {abs(variacao):.1f}% de {df['Ano'].iloc[0]} para {df['Ano'].iloc[-1]}".replace('.', ','),
         color=WHITE, fontsize=13, fontweight='bold', pad=15
     )
 
     patch_pico  = mpatches.Patch(color=ORANGE, label='Pico de desligamentos')
     patch_demais = mpatches.Patch(color=TEAL,  label='Demais anos')
     ax.legend(handles=[patch_pico, patch_demais],
-              loc='upper left', framealpha=0, labelcolor=WHITE)
+              loc='upper right', framealpha=0, labelcolor=WHITE)
 
     plt.tight_layout()
-    plt.savefig('grafico_desligamentos_por_ano.png', dpi=150, bbox_inches='tight',
-                facecolor=NAVY)
-    print("Salvo: grafico_desligamentos_por_ano.png")
+    salvar('grafico_desligamentos_por_ano.png')
     plt.show()
 
 
@@ -302,9 +309,55 @@ def grafico_funcionarios_ativos():
     plt.xticks(rotation=20, ha='right')
 
     plt.tight_layout()
-    plt.savefig('grafico_funcionarios_ativos.png', dpi=150, bbox_inches='tight',
-                facecolor=NAVY)
-    print("Salvo: grafico_funcionarios_ativos.png")
+    salvar('grafico_funcionarios_ativos.png')
+    plt.show()
+
+
+# =============================================================================
+# 6. TURNOVER POR NÍVEL DE SENIORIDADE
+# =============================================================================
+
+def grafico_turnover_nivel():
+    query = """
+        SELECT Nivel,
+               Total_Funcionarios,
+               Desligados,
+               Turnover_Pct
+        FROM   vw_Turnover_Nivel
+    """
+    df = ler_dados(query)
+    if df.empty:
+        print("Sem dados para Turnover por Nível.")
+        return
+
+    # Ordem de carreira: Júnior → Pleno → Sênior
+    ordem = {'Junior': 0, 'Pleno': 1, 'Senior': 2}
+    df = df.sort_values('Nivel', key=lambda s: s.map(ordem)).reset_index(drop=True)
+    rotulos = df['Nivel'].replace({'Junior': 'Júnior', 'Senior': 'Sênior'})
+
+    # Destaque: nível com maior turnover
+    idx_max = df['Turnover_Pct'].idxmax()
+    cores = [ORANGE if i == idx_max else TEAL for i in range(len(df))]
+
+    fig, ax = plt.subplots(figsize=(9, 5))
+    fig.patch.set_facecolor(NAVY)
+
+    bars = ax.bar(rotulos, df['Turnover_Pct'], color=cores, width=0.5)
+
+    for bar, val, desl, tot in zip(bars, df['Turnover_Pct'],
+                                   df['Desligados'], df['Total_Funcionarios']):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.8,
+                f'{val:.1f}%  ({desl} de {tot})'.replace('.', ','), ha='center', color=WHITE, fontsize=10)
+
+    ax.set_ylabel('Turnover (%)', color=GRAY)
+    ax.set_ylim(0, df['Turnover_Pct'].max() * 1.25)
+    ax.set_title(
+        'O turnover cai à medida que a senioridade aumenta',
+        color=WHITE, fontsize=13, fontweight='bold', pad=15
+    )
+
+    plt.tight_layout()
+    salvar('grafico_turnover_nivel.png')
     plt.show()
 
 
@@ -317,19 +370,22 @@ if __name__ == '__main__':
     print("  RH Analytics — Análise Python")
     print("=" * 60)
 
-    print("\n[1/5] Turnover por departamento...")
+    print("\n[1/6] Turnover por departamento...")
     grafico_turnover_departamento()
 
-    print("\n[2/5] Motivos de desligamento...")
+    print("\n[2/6] Motivos de desligamento...")
     grafico_Motivo_Saida()
 
-    print("\n[3/5] Tempo de casa por departamento...")
+    print("\n[3/6] Tempo de casa por departamento...")
     grafico_tempo_casa_departamento()
 
-    print("\n[4/5] Evolução de desligamentos por ano...")
+    print("\n[4/6] Evolução de desligamentos por ano...")
     grafico_desligamentos_por_ano()
 
-    print("\n[5/5] Funcionários ativos por departamento...")
+    print("\n[5/6] Funcionários ativos por departamento...")
     grafico_funcionarios_ativos()
 
-    print("\n✓ Análise concluída! Gráficos salvos na pasta do projeto.")
+    print("\n[6/6] Turnover por nível de senioridade...")
+    grafico_turnover_nivel()
+
+    print("\n✓ Análise concluída! Gráficos salvos em charts/.")
